@@ -1,0 +1,10 @@
+# Python bytecode
+__pycache__/
+
+# Environment variable files
+.env
+*.env
+
+# Testing-related
+.pytest_cache/
+
