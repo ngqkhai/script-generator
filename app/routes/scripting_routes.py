@@ -182,6 +182,31 @@ async def list_scripts(skip: int = 0, limit: int = 10):
     }
 
 
+@router.get("/scripts/collection/{collection_id}", response_model=Dict[str, Any])
+async def get_script_by_collection_id(collection_id: str):
+    """Get a script by collection ID"""
+    try:
+        # Find the script by collection_id
+        scripts = list(script_repository.collection.find({"collection_id": collection_id}))
+        
+        if not scripts:
+            raise HTTPException(status_code=404, detail="No scripts found for this collection ID")
+        
+        # Sort by created_at descending to get the latest script first
+        scripts.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        
+        # Return the latest script
+        return {
+            "script": scripts[0],
+            "message": "Script found for collection ID"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error finding script for collection {collection_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving script: {str(e)}")
+
+
 async def generate_script_in_background(script_id: str, request: ScriptRequest):
     """Background task to generate a script"""
     try:

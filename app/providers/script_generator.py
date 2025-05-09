@@ -41,7 +41,7 @@ class ScriptGenerator:
         start_time = time.time()
         
         # Create prompt with source data if provided
-        prompt = get_script_prompt_with_data(request, request.source_data)
+        prompt = get_script_prompt_with_data(request, request.content)
         
         # Get audience type and tone if provided
         audience_type = request.target_audience if request.target_audience else None
@@ -54,8 +54,8 @@ class ScriptGenerator:
             tone=tone
         )
         
-        # Add creation timestamp
-        structured_script["created_at"] = datetime.utcnow()
+        # Add creation timestamp as ISO format string to ensure JSON serialization
+        structured_script["created_at"] = datetime.utcnow().isoformat()
         
         logger.info(f"Script generated in {time.time() - start_time:.2f} seconds")
         return structured_script

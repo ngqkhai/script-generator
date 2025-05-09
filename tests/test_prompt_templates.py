@@ -11,7 +11,7 @@ def test_prompt_with_all_fields():
         duration_seconds=120,
         tone="informative",
         style_description="simple and clear",
-        source_data="Sample data for script"
+        content="Sample data for script"
     )
     
     prompt = get_script_prompt_with_data(request, "Additional source data")

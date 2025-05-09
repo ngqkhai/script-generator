@@ -3,6 +3,7 @@ from typing import Dict, Any, Optional
 import json
 import asyncio
 import logging
+import re
 
 from app.config import settings
 
@@ -42,13 +43,12 @@ class GeminiService:
         Returns:
             Dict containing the structured script
         """
-        generation_config = {
-            "temperature": 0.7,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 8192,
-            "response_mime_type": "application/json",  # Request structured JSON
-        }
+        generation_config = genai.types.GenerationConfig(
+            temperature=0.7,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=8192
+        )
         
         # Enhance prompt with audience-specific instructions if provided
         enhanced_prompt = prompt
@@ -57,6 +57,9 @@ class GeminiService:
             enhanced_prompt = f"{prompt}\n\n{audience_instructions}"
         
         try:
+            logger.info("Sending prompt to Gemini API")
+            logger.debug(f"Prompt: {enhanced_prompt}")
+            
             # Generate content asynchronously
             response = await asyncio.to_thread(
                 self.model.generate_content,
@@ -64,13 +67,26 @@ class GeminiService:
                 generation_config=generation_config
             )
             
+            logger.info("Received response from Gemini API")
+            
             # Parse the response as JSON
             if hasattr(response, 'candidates') and response.candidates:
                 json_text = response.candidates[0].content.parts[0].text
-                return json.loads(json_text)
+                logger.debug(f"Raw response text: {json_text}")
+                try:
+                    # Remove markdown code block formatting if present
+                    json_text = re.sub(r'^```json\s*', '', json_text)
+                    json_text = re.sub(r'\s*```$', '', json_text)
+                    return json.loads(json_text)
+                except json.JSONDecodeError as e:
+                    logger.error(f"Failed to parse JSON from response: {str(e)}")
+                    logger.error(f"Invalid JSON text: {json_text}")
+                    # Fallback to text parsing
+                    return self._extract_json_from_text(json_text)
             else:
                 # Fallback to text parsing if structured response fails
                 text_content = response.text
+                logger.debug(f"Fallback response text: {text_content}")
                 return self._extract_json_from_text(text_content)
                 
         except Exception as e:
@@ -93,11 +109,15 @@ class GeminiService:
             
             if json_start >= 0 and json_end > json_start:
                 json_str = text[json_start:json_end]
+                logger.debug(f"Extracted JSON string: {json_str}")
                 return json.loads(json_str)
             
+            logger.error("No JSON block found in response")
+            logger.debug(f"Full text: {text}")
             raise ValueError("No valid JSON found in response")
         except Exception as e:
             logger.error(f"Failed to extract JSON from response: {str(e)}")
+            logger.debug(f"Failed text: {text}")
             raise ValueError(f"Failed to parse script structure: {str(e)}")
     
     def _get_audience_instructions(self, audience_type: str, tone: str) -> str:
