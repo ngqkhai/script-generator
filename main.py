@@ -120,13 +120,21 @@ async def websocket_endpoint(websocket: WebSocket):
 async def debug_startup():
     logger.info("MANUAL STARTUP EVENT TRIGGERED - This should appear in logs")
 
+# Root endpoint for health checks
+@app.get("/")
+async def root():
+    return {"status": "healthy", "service": "script-generator"}
+
 if __name__ == "__main__":
     logger.info("Starting script generator service")
+    # Get port from environment variable (Railway sets this)
+    port = int(os.environ.get("PORT", 8002))
+    
     # Configure uvicorn with websocket-specific settings
     uvicorn.run(
         app,  # Use the app instance directly
         host="0.0.0.0", 
-        port=8002,
+        port=port,
         log_level="info",
         reload=False,
         timeout_keep_alive=120,  # Keep connections alive longer (2 minutes)
