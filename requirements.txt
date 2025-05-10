@@ -6,7 +6,8 @@ python-dotenv==1.0.0
 pymongo==4.3.3
 google-generativeai==0.3.2
 python-multipart==0.0.6
-aiohttp==3.8.6
+# Use a binary wheel for aiohttp if available
+aiohttp>=3.9.0
 httpx==0.26.0
 python-jose==3.3.0
 passlib==1.7.4
