@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     DATA_COLLECTED_QUEUE: str = "data_collected"
     SCRIPT_GENERATED_EXCHANGE: str = "script_generated"
     SCRIPT_GENERATED_ROUTING_KEY: str = "script.generated"
+    SCRIPT_VOICE_QUEUE: str = "script_voice"
+    SCRIPT_IMAGE_QUEUE: str = "script_image"
 
     # Logging configuration
     LOG_LEVEL: str = "INFO"
